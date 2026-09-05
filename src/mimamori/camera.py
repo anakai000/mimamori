@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover - picamera2 only exists on the Pi
 
 
 class Camera:
-    def __init__(self, size: Tuple[int, int] = (1296, 972)):
+    def __init__(self, size: Tuple[int, int] = (1296, 972), fps: float = 1.0):
         if Picamera2 is None:
             raise RuntimeError(
                 "picamera2 is not available in this environment; Camera only runs on the Pi "
@@ -25,7 +25,15 @@ class Camera:
         # bytes in B,G,R memory order (i.e. what OpenCV/cv2 calls BGR) - "BGR888" gives
         # the reverse. Confirmed empirically 2026-09-05: requesting "BGR888" produced
         # visibly swapped R/B channels (e.g. skin rendered blue).
-        config = self._picam2.create_video_configuration(main={"size": size, "format": "RGB888"})
+        #
+        # FrameDurationLimits caps the sensor/ISP's own capture rate to `fps` - without
+        # this, the sensor keeps running at its mode's native rate (e.g. ~46fps) even if
+        # we only pull a frame occasionally, wasting power on frames we throw away.
+        frame_duration_us = int(1_000_000 / fps)
+        config = self._picam2.create_video_configuration(
+            main={"size": size, "format": "RGB888"},
+            controls={"FrameDurationLimits": (frame_duration_us, frame_duration_us)},
+        )
         self._picam2.configure(config)
         self._picam2.start()
 

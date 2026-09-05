@@ -64,30 +64,54 @@ class RestroomTracker:
 
 @dataclass
 class ZoneTracker:
+    """Tracks BED/SOFA/TABLE occupancy from per-frame overlap tests.
+
+    Raw per-frame overlap is noisy (a bounding box straddling a region edge,
+    or the detector briefly missing/adding a person, flips it frame to
+    frame). To avoid firing an *-IN/*-OUT event for every such flicker, a
+    change is only confirmed - and the event emitted - once the opposite
+    reading has been seen for `debounce_frames` consecutive updates.
+    """
+
     regions: RegionSet
+    debounce_frames: int = 1
     _occupied: Dict[str, bool] = field(default_factory=dict, init=False)
+    _pending: Dict[str, bool] = field(default_factory=dict, init=False)
+    _pending_count: Dict[str, int] = field(default_factory=dict, init=False)
 
     def __post_init__(self) -> None:
         self._occupied = {zone: False for zone in SIMPLE_ZONES}
+        self._pending = {zone: False for zone in SIMPLE_ZONES}
+        self._pending_count = {zone: 0 for zone in SIMPLE_ZONES}
 
     def update(self, bboxes: Sequence[BBox]) -> List[str]:
         events: List[str] = []
         for zone in SIMPLE_ZONES:
             region = self.regions[zone]
-            now_occupied = any(region.overlaps(bbox) for bbox in bboxes)
-            was_occupied = self._occupied[zone]
-            if now_occupied and not was_occupied:
-                events.append(ZONE_EVENT_NAMES[zone][0])
-            elif was_occupied and not now_occupied:
-                events.append(ZONE_EVENT_NAMES[zone][1])
-            self._occupied[zone] = now_occupied
+            raw_occupied = any(region.overlaps(bbox) for bbox in bboxes)
+            confirmed = self._occupied[zone]
+
+            if raw_occupied == confirmed:
+                self._pending_count[zone] = 0
+                continue
+
+            if raw_occupied == self._pending[zone]:
+                self._pending_count[zone] += 1
+            else:
+                self._pending[zone] = raw_occupied
+                self._pending_count[zone] = 1
+
+            if self._pending_count[zone] >= self.debounce_frames:
+                self._occupied[zone] = raw_occupied
+                self._pending_count[zone] = 0
+                events.append(ZONE_EVENT_NAMES[zone][0 if raw_occupied else 1])
         return events
 
 
 class EventDetector:
-    def __init__(self, regions: RegionSet):
+    def __init__(self, regions: RegionSet, zone_debounce_frames: int = 1):
         self.regions = regions
-        self._zone_tracker = ZoneTracker(regions)
+        self._zone_tracker = ZoneTracker(regions, debounce_frames=zone_debounce_frames)
         self._restroom_tracker = RestroomTracker(regions["door"])
 
     def update(self, bboxes: Sequence[BBox], door_state: str) -> List[str]:

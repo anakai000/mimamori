@@ -80,3 +80,34 @@ def test_event_detector_combines_zone_and_restroom_events():
     bed_box = bbox_in(regions["bed"])
 
     assert detector.update([bed_box], "open") == ["BED-IN"]
+
+
+def test_zone_tracker_debounces_single_frame_flicker():
+    regions = make_regions()
+    tracker = ZoneTracker(regions, debounce_frames=3)
+    bed_box = bbox_in(regions["bed"])
+    away = far_away_bbox()
+
+    assert tracker.update([bed_box]) == []
+    assert tracker.update([bed_box]) == []
+    assert tracker.update([bed_box]) == ["BED-IN"]
+
+    # A single missed-detection frame shouldn't be enough to flip it back out.
+    assert tracker.update([away]) == []
+    assert tracker.update([bed_box]) == []
+    assert tracker.update([bed_box]) == []
+
+
+def test_zone_tracker_confirms_change_that_holds_for_debounce_window():
+    regions = make_regions()
+    tracker = ZoneTracker(regions, debounce_frames=3)
+    bed_box = bbox_in(regions["bed"])
+    away = far_away_bbox()
+
+    tracker.update([bed_box])
+    tracker.update([bed_box])
+    tracker.update([bed_box])  # confirmed BED-IN
+
+    assert tracker.update([away]) == []
+    assert tracker.update([away]) == []
+    assert tracker.update([away]) == ["BED-OUT"]

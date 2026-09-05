@@ -34,9 +34,9 @@ class MimamoriApp:
             config.door.closed_edge_density,
             config.door.open_edge_density,
         )
-        self.event_detector = EventDetector(self.regions)
+        self.event_detector = EventDetector(self.regions, zone_debounce_frames=config.detection.zone_debounce_frames)
         self.state_machine = StateMachine(config.state_timeouts_seconds, now=time.monotonic())
-        self.camera = Camera(size=config.camera.size)
+        self.camera = Camera(size=config.camera.size, fps=config.camera.fps)
 
         self.notifier: LineNotifier | None = None
         if config.line_channel_access_token and config.line_to_user_id:

@@ -1,16 +1,26 @@
 regions_file: config/regions.yaml
 
 camera:
-  # Matches the 1296x972 @ 46.34fps mode of the OV5647 sensor (see SPEC.md).
+  # Matches the 1296x972 @ 46.34fps mode of the OV5647 sensor (see SPEC.md),
+  # but fps below caps the sensor/ISP's own capture rate well under that mode's
+  # native rate to save power - a night-routine use case (especially with
+  # elderly, slow-moving subjects) doesn't need more than 1fps.
   size: [1296, 972]
+  fps: 1.0
 
 detection:
   model_prototxt: models/MobileNetSSD_deploy.prototxt
   model_weights: models/MobileNetSSD_deploy.caffemodel
   confidence_threshold: 0.5
-  # How often (seconds) to pull a frame and run detection. This is a slow
-  # state machine (rooms, not frames) - no need to run at full camera fps.
-  process_interval_seconds: 0.5
+  # How often (seconds) to pull a frame and run detection. Should match
+  # camera.fps (1/fps) - no point polling faster than the camera actually
+  # produces new frames, or slower and missing ones.
+  process_interval_seconds: 1.0
+  # A bed/sofa/table occupancy change must hold for this many consecutive
+  # frames before it's confirmed as a real *-IN/*-OUT event - filters out
+  # single-frame detector flicker (bbox jittering across a region edge).
+  # At process_interval_seconds=1.0 this means ~4s to confirm a change.
+  zone_debounce_frames: 4
 
 door:
   # Measured 2026-09-05 from the door region in config/regions.yaml, using

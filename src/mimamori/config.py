@@ -18,6 +18,9 @@ DEFAULT_CONFIG_PATH = REPO_ROOT / "config" / "config.yaml"
 @dataclass
 class CameraConfig:
     size: Tuple[int, int] = (1296, 972)
+    # Caps the sensor/ISP's own capture rate (see camera.py) - lower means less
+    # power draw. 1fps is plenty for a slow-moving night-routine use case.
+    fps: float = 1.0
 
 
 @dataclass
@@ -25,7 +28,12 @@ class DetectionConfig:
     model_prototxt: str = "models/MobileNetSSD_deploy.prototxt"
     model_weights: str = "models/MobileNetSSD_deploy.caffemodel"
     confidence_threshold: float = 0.5
-    process_interval_seconds: float = 0.5
+    process_interval_seconds: float = 1.0
+    # How many consecutive frames a bed/sofa/table occupancy change must hold
+    # before it's confirmed as a real *-IN/*-OUT event, to filter out
+    # single-frame detector flicker (e.g. a bbox jittering across the region
+    # edge). At process_interval_seconds=1.0 this default (4) means ~4s.
+    zone_debounce_frames: int = 4
 
 
 @dataclass
@@ -90,7 +98,10 @@ class Config:
         defaults = cls()
         return cls(
             regions_file=raw.get("regions_file", defaults.regions_file),
-            camera=CameraConfig(size=tuple(camera_raw.get("size", defaults.camera.size))),
+            camera=CameraConfig(
+                size=tuple(camera_raw.get("size", defaults.camera.size)),
+                fps=camera_raw.get("fps", defaults.camera.fps),
+            ),
             detection=DetectionConfig(
                 model_prototxt=detection_raw.get("model_prototxt", defaults.detection.model_prototxt),
                 model_weights=detection_raw.get("model_weights", defaults.detection.model_weights),
@@ -99,6 +110,9 @@ class Config:
                 ),
                 process_interval_seconds=detection_raw.get(
                     "process_interval_seconds", defaults.detection.process_interval_seconds
+                ),
+                zone_debounce_frames=detection_raw.get(
+                    "zone_debounce_frames", defaults.detection.zone_debounce_frames
                 ),
             ),
             door=DoorConfig(
