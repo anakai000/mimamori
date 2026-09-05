@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from datetime import datetime
+from pathlib import Path
 
 from .camera import Camera
 from .config import Config
@@ -46,6 +48,9 @@ class MimamoriApp:
         else:
             logger.warning("LINE_CHANNEL_ACCESS_TOKEN/LINE_TO_USER_ID not set; alerts will only be logged.")
 
+        if config.debug.event_capture_dir:
+            Path(config.debug.event_capture_dir).mkdir(parents=True, exist_ok=True)
+
     async def run(self) -> None:
         interval = self.config.detection.process_interval_seconds
         try:
@@ -64,10 +69,19 @@ class MimamoriApp:
         for event in self.event_detector.update(bboxes, door_state):
             self.state_machine.handle_event(event, now)
             logger.info("event=%s state=%s", event, self.state_machine.state.value)
+            self._capture_event(event, frame)
 
         alert = self.state_machine.check_timeout(now)
         if alert is not None:
             self._handle_alert(alert, frame)
+
+    def _capture_event(self, event: str, frame) -> None:
+        capture_dir = self.config.debug.event_capture_dir
+        if not capture_dir:
+            return
+        timestamp = datetime.now().strftime("%y%m%d%H%M%S")
+        path = Path(capture_dir) / f"{timestamp}_{event}.jpg"
+        self.camera.save_snapshot(frame, str(path))
 
     def _handle_alert(self, alert, frame) -> None:
         logger.warning(alert.message)

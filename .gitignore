@@ -14,3 +14,5 @@ models/*.caffemodel
 # Runtime artifacts
 /tmp/
 *.jpg
+/run/
+/event_captures/

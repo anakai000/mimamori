@@ -1,30 +1,34 @@
 # Region polygons in pixel coordinates, matching camera.size in config.yaml
-# (currently 1296x972). PLACEHOLDER VALUES — replace by saving a snapshot
-# on-device (see models/README.md) and reading off corner pixel coordinates
-# for each area in an image viewer. Each region is a list of [x, y] points
-# forming a closed polygon (3+ points; order doesn't matter for overlap
-# testing but should trace the shape without crossing itself).
+# (currently 1296x972).
+#
+# PROVISIONAL VALUES as of 2026-09-05: the camera is not in its final mounted
+# position yet, so these were eyeballed from a test snapshot (snapshot.jpg)
+# taken from a temporary spot. door/sofa/bed are rough approximations of the
+# real furniture visible in that shot; table has no real candidate in frame
+# yet and is just a placeholder rectangle that doesn't overlap the others.
+# All four MUST be re-calibrated once the camera is mounted at its real
+# location (see models/README.md for the calibration procedure).
 
-door:
-  - [0, 0]
-  - [100, 0]
-  - [100, 200]
-  - [0, 200]
+door: # the hinged door visible in snapshot.jpg, standing in for the restroom door
+  - [605, 140]
+  - [780, 140]
+  - [780, 905]
+  - [605, 905]
 
-bed:
-  - [0, 0]
-  - [100, 0]
-  - [100, 200]
-  - [0, 200]
+bed: # floor area in front of the hinged door
+  - [500, 860]
+  - [900, 860]
+  - [900, 972]
+  - [500, 972]
 
-sofa:
-  - [0, 0]
-  - [100, 0]
-  - [100, 200]
-  - [0, 200]
+sofa: # visible portion of the green sofa, bottom-left of frame
+  - [0, 520]
+  - [480, 520]
+  - [480, 972]
+  - [0, 972]
 
-table:
-  - [0, 0]
-  - [100, 0]
-  - [100, 200]
-  - [0, 200]
+table: # placeholder only — no table in frame yet
+  - [850, 300]
+  - [1050, 300]
+  - [1050, 500]
+  - [850, 500]

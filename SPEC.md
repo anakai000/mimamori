@@ -14,20 +14,24 @@ LINE Messaging API. This will later be extended with a bedside PIR motion sensor
   dependency, modest memory footprint, and fast enough on Pi 4 CPU for a slow-changing state
   machine like this one. Configurable so the model path/backend can be swapped later.
 - **Camera:** actual hardware confirmed via `rpicam-hello --list-cameras` as an OV5647 sensor
-  (Raspberry Pi Camera Module v1.3, 5MP, CSI-connected), with the IR-cut filter physically
-  removed from the lens by the user — making it NoIR-equivalent (IR-sensitive) for night use.
-  Implications for software:
-  - An IR illuminator (e.g. 850/940nm IR LEDs) is required for night-time visibility; not in
-    scope to build, assumed to be present in the room.
-  - Night frames will be near-monochrome/off-color; daytime frames will look washed/pink since
-    there's no IR-cut filter. Person detection should tolerate this — the MobileNet-SSD model
-    is grayscale-tolerant, but if accuracy suffers under IR lighting, converting frames to
-    grayscale before inference is the fallback.
-  - Auto white balance should be set to a fixed/manual mode rather than an outdoor/indoor AWB
-    preset, since libcamera's color-based AWB algorithms assume a normal IR-cut-filtered sensor.
+  (Raspberry Pi Camera Module v1.3, 5MP, CSI-connected) — a standard, unmodified module (an
+  earlier version of this spec incorrectly assumed the IR-cut filter had been removed; it has
+  not been, and that text has been corrected). Night-time visibility with an unmodified sensor
+  will be limited without external illumination — not in scope to build; assumed to be handled
+  separately (a compatible NoIR-modified camera or a room light could be swapped in later,
+  in which case the white-balance note below becomes relevant again).
   Accessed via `picamera2` (libcamera backend). Detection will run against the
   `1296x972 @ 46.34fps` mode (best balance of field-of-view vs. frame rate for a CPU-bound
   detector; the `640x480 @ 62.5fps` mode is the fallback if that's still too slow).
+  - **Known picamera2 gotcha (fixed 2026-09-05):** picamera2/libcamera's format naming is
+    counterintuitive — requesting `"RGB888"` actually delivers bytes in B,G,R memory order
+    (what OpenCV calls BGR), and `"BGR888"` delivers true R,G,B order. `camera.py` initially
+    requested `"BGR888"`, which silently swapped the R and B channels in every captured frame
+    (visible as e.g. skin rendering blue) and was mistaken for an IR-cut-filter effect before
+    being diagnosed. Fixed by requesting `"RGB888"` instead. If a genuinely NoIR-modified camera
+    is used later, auto white balance should be set to a fixed/manual mode rather than an
+    outdoor/indoor AWB preset, since libcamera's color-based AWB algorithms assume a normal
+    IR-cut-filtered sensor.
 - **Regions & door state:** defined in a static, hand-authored YAML config
   (`config/regions.yaml`) as pixel-coordinate polygons, calibrated by eye against a saved
   snapshot. No interactive calibration tool for v1. Door open/closed is inferred from

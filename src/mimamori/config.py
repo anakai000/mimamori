@@ -40,6 +40,14 @@ class NotifierConfig:
     snapshot_public_url_base: Optional[str] = None
 
 
+@dataclass
+class DebugConfig:
+    # When set, a snapshot is saved here every time a *-IN/*-OUT event fires,
+    # named "<YYMMDDHHMMSS>_<EVENT>.jpg" (e.g. 260905143005_TABLE-IN.jpg).
+    # For testing/tuning region calibration, not needed in normal operation.
+    event_capture_dir: Optional[str] = None
+
+
 DEFAULT_STATE_TIMEOUTS_SECONDS: Dict[State, Optional[float]] = {
     State.OTHER: 180.0,
     State.RESTROOM: 600.0,
@@ -56,6 +64,7 @@ class Config:
     detection: DetectionConfig = field(default_factory=DetectionConfig)
     door: DoorConfig = field(default_factory=DoorConfig)
     notifier: NotifierConfig = field(default_factory=NotifierConfig)
+    debug: DebugConfig = field(default_factory=DebugConfig)
     state_timeouts_seconds: Dict[State, Optional[float]] = field(
         default_factory=lambda: dict(DEFAULT_STATE_TIMEOUTS_SECONDS)
     )
@@ -71,6 +80,7 @@ class Config:
         detection_raw = raw.get("detection", {})
         door_raw = raw.get("door", {})
         notifier_raw = raw.get("notifier", {})
+        debug_raw = raw.get("debug", {})
         timeouts_raw = raw.get("state_timeouts_seconds", {})
 
         state_timeouts_seconds = dict(DEFAULT_STATE_TIMEOUTS_SECONDS)
@@ -100,6 +110,9 @@ class Config:
                 snapshot_public_url_base=notifier_raw.get(
                     "snapshot_public_url_base", os.environ.get("SNAPSHOT_PUBLIC_URL_BASE")
                 ),
+            ),
+            debug=DebugConfig(
+                event_capture_dir=debug_raw.get("event_capture_dir", defaults.debug.event_capture_dir),
             ),
             state_timeouts_seconds=state_timeouts_seconds,
             line_channel_access_token=os.environ.get("LINE_CHANNEL_ACCESS_TOKEN"),

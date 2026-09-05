@@ -1,6 +1,8 @@
 # Portable dependencies (installed into the project venv with pip).
 numpy
-opencv-python-headless
+# Pinned <5: OpenCV 5.0 removed Caffe support from cv2.dnn (readNetFromCaffe no
+# longer exists), which detector.py relies on for the MobileNet-SSD model.
+opencv-python-headless<5
 PyYAML
 line-bot-sdk
 

@@ -13,11 +13,15 @@ detection:
   process_interval_seconds: 0.5
 
 door:
-  # CALIBRATE ME on-device: capture the door region's average Canny edge
-  # density with the door closed and with it open (see models/README.md),
-  # then set the two values below. The placeholders here are not tuned.
-  closed_edge_density: 5.0
-  open_edge_density: 25.0
+  # Measured 2026-09-05 from the door region in config/regions.yaml, using
+  # the temporary (non-final) camera position — RE-CALIBRATE once the camera
+  # is mounted at its real location (lighting/distance/angle all affect
+  # this), following the procedure in models/README.md.
+  # NOTE: measured before the camera.py R/B channel-swap fix (see SPEC.md);
+  # the grayscale conversion these are derived from may shift slightly now
+  # that colors are correct — re-verify next time you're calibrating anyway.
+  closed_edge_density: 0.078
+  open_edge_density: 2.653
 
 # Per-state max duration before an ANOMALY alert fires. null = no timeout
 # (BED has none, since a long sleep is expected).
@@ -36,3 +40,8 @@ notifier:
   # service, which accepted direct uploads). Leave null/unset to send
   # text-only alerts. Can also be set via the SNAPSHOT_PUBLIC_URL_BASE env var.
   snapshot_public_url_base: null
+
+debug:
+  # For testing/tuning region calibration: saves a snapshot on every *-IN/*-OUT
+  # event, named "<YYMMDDHHMMSS>_<EVENT>.jpg". Set to null to disable.
+  event_capture_dir: event_captures

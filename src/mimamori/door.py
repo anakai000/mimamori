@@ -1,10 +1,10 @@
 """Restroom sliding-door open/closed classification.
 
-The lens has no IR-cut filter (see SPEC.md), so color can't be relied on at
-night; instead we classify the door's region by how textured/edgy it looks,
-via Canny edge density. This needs two reference values calibrated on-device
-(config.yaml -> door.closed_edge_density / open_edge_density): capture a frame
-with the door closed and one with it open, and record each edge density.
+Rather than relying on color (unreliable in low/IR light, see SPEC.md), the
+door's region is classified by how textured/edgy it looks, via Canny edge
+density. This needs two reference values calibrated on-device (config.yaml ->
+door.closed_edge_density / open_edge_density): capture a frame with the door
+closed and one with it open, and record each edge density.
 """
 
 from __future__ import annotations

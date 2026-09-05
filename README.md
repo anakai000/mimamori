@@ -19,6 +19,7 @@ step-by-step configuration walkthrough in Japanese, see
 - `main.py` — daemon entrypoint.
 - `systemd/mimamori.service` — unit file to run this on boot.
 - `models/` — where the detection model weights go (not committed).
+- `scripts/` — operational helper scripts (see "Helper scripts" below).
 - `tests/` — unit tests (state machine, region overlap, event derivation,
   door classification, detection post-processing, LINE payload building).
 
@@ -56,6 +57,26 @@ sudo cp systemd/mimamori.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now mimamori.service
 ```
+
+## Helper scripts
+
+- `scripts/start.sh` — starts the daemon in the background (`run/mimamori.pid`,
+  logs to `run/mimamori.log`). Fails if it thinks it's already running.
+- `scripts/stop.sh` — stops it via the PID file.
+- `scripts/show_regions.py [--image PATH] [--output PATH]` — draws the
+  configured door/bed/sofa/table regions onto a snapshot (captures a fresh
+  one from the camera by default — stop the daemon first, or pass `--image`)
+  and saves it (default `regions_preview.jpg`) so you can eyeball whether the
+  regions still line up.
+- `scripts/edit_regions.py [--image PATH]` — a small Tkinter GUI (needs a
+  display: run it on the Pi's desktop, or over `ssh -X`) to click out new
+  door/bed/sofa/table polygons on a live or still snapshot and save them
+  straight to `config/regions.yaml`. Needs `python3-pil.imagetk`
+  (`sudo apt install python3-pil.imagetk`) in addition to the base setup.
+
+Both region tools need the camera free, so stop the daemon first (or pass
+`--image` an existing snapshot) — only one process can hold `picamera2` open
+at a time.
 
 ## Testing
 

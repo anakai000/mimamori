@@ -21,7 +21,11 @@ class Camera:
                 "(install it via apt: python3-picamera2)."
             )
         self._picam2 = Picamera2()
-        config = self._picam2.create_video_configuration(main={"size": size, "format": "BGR888"})
+        # Counterintuitively, picamera2/libcamera's "RGB888" format actually delivers
+        # bytes in B,G,R memory order (i.e. what OpenCV/cv2 calls BGR) - "BGR888" gives
+        # the reverse. Confirmed empirically 2026-09-05: requesting "BGR888" produced
+        # visibly swapped R/B channels (e.g. skin rendered blue).
+        config = self._picam2.create_video_configuration(main={"size": size, "format": "RGB888"})
         self._picam2.configure(config)
         self._picam2.start()
 
