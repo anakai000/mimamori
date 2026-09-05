@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+src/*.egg-info/
+
+# Secrets — never commit
+.env
+
+# Large model weights — fetch separately, see models/README.md
+models/*.caffemodel
+
+# Runtime artifacts
+/tmp/
+*.jpg

@@ -1,0 +1,10 @@
+# Portable dependencies (installed into the project venv with pip).
+numpy
+opencv-python-headless
+PyYAML
+line-bot-sdk
+
+# NOT listed here: picamera2 and gpiozero. On Raspberry Pi OS these come from apt
+# (python3-picamera2, python3-gpiozero) because they bind to system libcamera/GPIO
+# libraries that pip wheels don't provide. Create the venv with
+# `python3 -m venv --system-site-packages .venv` so it can see the apt-installed copies.

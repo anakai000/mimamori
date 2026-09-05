@@ -1,0 +1,16 @@
+[Unit]
+Description=Mimamori night-routine monitoring daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=anakai
+WorkingDirectory=/home/anakai/mimamori
+EnvironmentFile=/home/anakai/mimamori/.env
+ExecStart=/home/anakai/mimamori/.venv/bin/python /home/anakai/mimamori/main.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

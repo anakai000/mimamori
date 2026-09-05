@@ -1,0 +1,38 @@
+regions_file: config/regions.yaml
+
+camera:
+  # Matches the 1296x972 @ 46.34fps mode of the OV5647 sensor (see SPEC.md).
+  size: [1296, 972]
+
+detection:
+  model_prototxt: models/MobileNetSSD_deploy.prototxt
+  model_weights: models/MobileNetSSD_deploy.caffemodel
+  confidence_threshold: 0.5
+  # How often (seconds) to pull a frame and run detection. This is a slow
+  # state machine (rooms, not frames) - no need to run at full camera fps.
+  process_interval_seconds: 0.5
+
+door:
+  # CALIBRATE ME on-device: capture the door region's average Canny edge
+  # density with the door closed and with it open (see models/README.md),
+  # then set the two values below. The placeholders here are not tuned.
+  closed_edge_density: 5.0
+  open_edge_density: 25.0
+
+# Per-state max duration before an ANOMALY alert fires. null = no timeout
+# (BED has none, since a long sleep is expected).
+state_timeouts_seconds:
+  OTHER: 180 # 3 minutes
+  RESTROOM: 600 # 10 minutes
+  SOFA: 3600 # 1 hour
+  TABLE: 3600 # 1 hour
+  BED: null
+
+notifier:
+  snapshot_path: /tmp/alert.jpg
+  # Optional: base URL where snapshot_path's filename is reachable over HTTPS,
+  # e.g. "https://your-host/snapshots". The LINE Messaging API requires a
+  # public URL for image messages (unlike the old, now-retired LINE Notify
+  # service, which accepted direct uploads). Leave null/unset to send
+  # text-only alerts. Can also be set via the SNAPSHOT_PUBLIC_URL_BASE env var.
+  snapshot_public_url_base: null

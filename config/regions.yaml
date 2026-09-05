@@ -1,0 +1,30 @@
+# Region polygons in pixel coordinates, matching camera.size in config.yaml
+# (currently 1296x972). PLACEHOLDER VALUES — replace by saving a snapshot
+# on-device (see models/README.md) and reading off corner pixel coordinates
+# for each area in an image viewer. Each region is a list of [x, y] points
+# forming a closed polygon (3+ points; order doesn't matter for overlap
+# testing but should trace the shape without crossing itself).
+
+door:
+  - [0, 0]
+  - [100, 0]
+  - [100, 200]
+  - [0, 200]
+
+bed:
+  - [0, 0]
+  - [100, 0]
+  - [100, 200]
+  - [0, 200]
+
+sofa:
+  - [0, 0]
+  - [100, 0]
+  - [100, 200]
+  - [0, 200]
+
+table:
+  - [0, 0]
+  - [100, 0]
+  - [100, 200]
+  - [0, 200]
