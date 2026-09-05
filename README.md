@@ -5,9 +5,12 @@ for a person moving between the bed, sofa, table, and restroom, and pushes a
 LINE alert (with a snapshot) if someone stays somewhere unexpectedly long —
 e.g. a fall in the restroom.
 
-Full requirements and design decisions are in [SPEC.md](SPEC.md). For a
-step-by-step configuration walkthrough in Japanese, see
-[docs/設定ガイド.md](docs/設定ガイド.md).
+Full requirements and design decisions are in [SPEC.md](SPEC.md). For
+step-by-step walkthroughs in Japanese, see
+[docs/インストールガイド.md](docs/インストールガイド.md) (fresh install on a
+new Pi: cloning, dependencies) and
+[docs/設定ガイド.md](docs/設定ガイド.md) (configuration: LINE, region
+calibration, thresholds).
 
 ## Project layout
 
@@ -84,10 +87,17 @@ scripts/install_service.sh
   door/bed/sofa/table polygons on a live or still snapshot and save them
   straight to `config/regions.yaml`. Needs `python3-pil.imagetk`
   (`sudo apt install python3-pil.imagetk`) in addition to the base setup.
+- `scripts/preview.py` — a live, continuously-updating Tkinter window running
+  the same detect → door → events → state pipeline as the daemon (regions,
+  detected person boxes, door state, and current state all drawn on top of
+  the live feed) but with no side effects — no LINE alerts, no
+  `event_captures` files. For visually sanity-checking behavior in real
+  time. Needs a display; same `python3-pil.imagetk` dependency as
+  `edit_regions.py`. Close the window to quit.
 
-Both region tools need the camera free, so stop the daemon first (or pass
-`--image` an existing snapshot) — only one process can hold `picamera2` open
-at a time.
+All three camera-using tools above need the camera free, so stop the daemon
+first (or pass `--image` an existing snapshot, for the two that support it)
+— only one process can hold `picamera2` open at a time.
 
 ## Testing
 
