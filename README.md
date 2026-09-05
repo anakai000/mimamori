@@ -50,19 +50,30 @@ set -a; source .env; set +a
 python main.py
 ```
 
-Or install as a systemd service:
+Or install as a systemd service, so it starts automatically on boot:
 
 ```bash
-sudo cp systemd/mimamori.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now mimamori.service
+scripts/install_service.sh
 ```
+
+(equivalent to `sudo cp systemd/mimamori.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable --now mimamori.service`)
 
 ## Helper scripts
 
+- `scripts/install_service.sh` — installs `systemd/mimamori.service` so the
+  daemon starts automatically on boot (needs sudo; run it yourself, see
+  "Running" above).
 - `scripts/start.sh` — starts the daemon in the background (`run/mimamori.pid`,
   logs to `run/mimamori.log`). Fails if it thinks it's already running.
-- `scripts/stop.sh` — stops it via the PID file.
+  For ad-hoc/manual runs — once `install_service.sh` is set up, systemd starts
+  it on boot instead and this isn't needed day-to-day.
+- `scripts/stop.sh` — stops it via the PID file (only for instances started
+  with `scripts/start.sh` — for the systemd-managed one, use
+  `scripts/stop_service.sh` instead).
+- `scripts/stop_service.sh` — stops the systemd-managed daemon (needs sudo;
+  run it yourself). Leaves it enabled, so it starts again on next boot — pass
+  that off to `sudo systemctl disable --now mimamori.service` if you want to
+  stop that too.
 - `scripts/show_regions.py [--image PATH] [--output PATH]` — draws the
   configured door/bed/sofa/table regions onto a snapshot (captures a fresh
   one from the camera by default — stop the daemon first, or pass `--image`)
